@@ -38,6 +38,7 @@ namespace ProjectSignalR
 
             app.UseRouting();
             app.UseStaticFiles();
+            app.UseAuthentication();
 
             app.UseEndpoints(endpoints =>
             {

@@ -8,6 +8,7 @@ namespace ProjectSignalR.Models.ORM.Entities
     public class AdminUser
     {
         public int ID { get; set; }
+        public string UserName { get; set; }
         public string EMail { get; set; }
         public string Password { get; set; }
         public string ConnectionID { get; set; }

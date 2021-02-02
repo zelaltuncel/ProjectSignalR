@@ -22,8 +22,8 @@ namespace ProjectSignalR.Hubs
         public async Task SendMessage(string message)
         {
 
-            string msg = message.Trim();
-            await Clients.All.SendAsync("ReceiveMessage", msg);
+            //string msg = message.Trim();
+            await Clients.All.SendAsync("ReceiveMessage", message);
             //await Clients.Client("connectionid").SendAsync("ReceiveMessage", msg);
         }
     }

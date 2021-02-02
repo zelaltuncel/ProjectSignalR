@@ -3,6 +3,7 @@
     Layout = null;
 }
 
+@model List<ProjectSignalR.Models.ORM.Entities.AdminUser>
 <!DOCTYPE html>
 
 <html>
@@ -55,7 +56,7 @@
             <div id="profile">
                 <div class="wrap">
                     <img id="profile-img" src="http://emilcarlsson.se/assets/mikeross.png" class="online" alt="" />
-                    <p>Mike Ross</p>
+                    <p>@ViewBag.username</p>
                     <i class="fa fa-chevron-down expand-button" aria-hidden="true"></i>
                     <div id="status-options">
                         <ul>
@@ -104,7 +105,7 @@
                     
                     <li class="contact">
                         <div class="wrap">
-                            <span class="contact-status online"></span>
+                            <span class="contact-status offline"></span>
                             <img src="http://emilcarlsson.se/assets/jonathansidwell.png" alt="" />
                             <div class="meta">
                                 <p class="name">Jonathan Sidwell</p>
@@ -211,27 +212,27 @@
             $("#status-options").removeClass("active");
         });
 
-        function newMessage() {
-            message = $(".message-input input").val();
-            if ($.trim(message) == '') {
-                return false;
-            }
-            $('<li class="sent"><img src="http://emilcarlsson.se/assets/mikeross.png" alt="" /><p>' + message + '</p></li>').appendTo($('.messages ul'));
-            $('.message-input input').val(null);
-            $('.contact.active .preview').html('<span>You: </span>' + message);
-            $(".messages").animate({ scrollTop: $(document).height() }, "fast");
-        };
+        //function newMessage() {
+        //    message = $(".message-input input").val();
+        //    if ($.trim(message) == '') {
+        //        return false;
+        //    }
+        //    $('<li class="sent"><img src="http://emilcarlsson.se/assets/mikeross.png" alt="" /><p>' + message + '</p></li>').appendTo($('.messages ul'));
+        //    $('.message-input input').val(null);
+        //    $('.contact.active .preview').html('<span>You: </span>' + message);
+        //    $(".messages").animate({ scrollTop: $(document).height() }, "fast");
+        //};
 
-        $('.submit').click(function () {
-            newMessage();
-        });
+        //$('.submit').click(function () {
+        //    newMessage();
+        //});
 
-        $(window).on('keydown', function (e) {
-            if (e.which == 13) {
-                newMessage();
-                return false;
-            }
-        });
+        //$(window).on('keydown', function (e) {
+        //    if (e.which == 13) {
+        //        $('.submit').trigger('click');
+        //        return false;
+        //    }
+        //});
         //# sourceURL=pen.js
     </script>
 </body>
@@ -244,8 +245,11 @@
     var connection = new signalR.HubConnectionBuilder().withUrl("/chatHub").build();
 
 
-    connection.on("ReceiveMessage", function (msg) {
-        $("ul").append("<li>" + msg + "</li>");
+    connection.on("ReceiveMessage", function (message) {
+        $('<li class="sent"><img src="http://emilcarlsson.se/assets/mikeross.png" alt="" /><p>' + message + '</p></li>').appendTo($('.messages ul'));
+        $('.message-input input').val(null);
+        $('.contact.active .preview').html('<span>You: </span>' + message);
+        $(".messages").animate({ scrollTop: $(document).height() }, "fast");
         //$("body").css("background-color", "red");
     });
 
@@ -258,17 +262,27 @@
     });
 
 
-    $("#send").click(function () {
+    $(".submit").click(function () {
 
-        var message = $("#msg").val();
+        var message = $(".message-input input").val();
+        if ($.trim(message) == '') {
+            return false;
+        }
 
         connection.invoke("SendMessage", message).catch(function (err) {
             //return console.error(err.toString());
         });
 
-        $("#msg").val("")
+        //$(".message-input input").val("")
 
-    })
+    });
+
+    $(window).on('keydown', function (e) {
+        if (e.which == 13) {
+            $('.submit').trigger('click');
+            return false;
+        }
+    });
 
 
                 // event.preventDefault();
