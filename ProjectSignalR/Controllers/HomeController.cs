@@ -20,7 +20,11 @@ namespace ProjectSignalR.Controllers
 
         public IActionResult Index()
         {
-            //ViewBag.username = HttpContext.User.Claims.ToArray()[2].Value;
+            ViewBag.username = HttpContext.User.Claims.ToArray()[2].Value;
+            ViewBag.loginID = HttpContext.User.Claims.ToArray()[1].Value;
+
+
+
             List<AdminUser> users = _chatContext.AdminUsers.ToList();
 
             return View(users);

@@ -12,6 +12,6 @@ namespace ProjectSignalR.Models.ORM.Entities
         public string EMail { get; set; }
         public string Password { get; set; }
         public string ConnectionID { get; set; }
-        public bool OnlineStatus { get; set; }
+        public string OnlineStatus { get; set; }
     }
 }

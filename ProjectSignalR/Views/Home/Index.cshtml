@@ -82,37 +82,65 @@
             </div>
             <div id="contacts">
                 <ul>
-                    <li class="contact">
-                        <div class="wrap">
-                            <span class="contact-status online"></span>
-                            <img src="http://emilcarlsson.se/assets/louislitt.png" alt="" />
-                            <div class="meta">
-                                <p class="name">Louis Litt</p>
-                                <p class="preview">You just got LITT up, Mike.</p>
-                            </div>
-                        </div>
-                    </li>
-                    <li class="contact active">
-                        <div class="wrap">
-                            <span class="contact-status busy"></span>
-                            <img src="http://emilcarlsson.se/assets/harveyspecter.png" alt="" />
-                            <div class="meta">
-                                <p class="name">Harvey Specter</p>
-                                <p class="preview">Wrong. You take the gun, or you pull out a bigger one. Or, you call their bluff. Or, you do any one of a hundred and forty six other things.</p>
-                            </div>
-                        </div>
-                    </li>
-                    
-                    <li class="contact">
-                        <div class="wrap">
-                            <span class="contact-status offline"></span>
-                            <img src="http://emilcarlsson.se/assets/jonathansidwell.png" alt="" />
-                            <div class="meta">
-                                <p class="name">Jonathan Sidwell</p>
-                                <p class="preview"><span>You:</span> That's bullshit. This deal is solid.</p>
-                            </div>
-                        </div>
-                    </li>
+                    @*<li class="contact">
+            <div class="wrap">
+                <span class="contact-status online"></span>
+                <img src="http://emilcarlsson.se/assets/louislitt.png" alt="" />
+                <div class="meta">
+                    <p class="name">Louis Litt</p>
+                    <p class="preview">You just got LITT up, Mike.</p>
+                </div>
+            </div>
+        </li>*@
+                    @foreach (var item in Model)
+                    {
+                        @if (item.ID.ToString() != ViewBag.loginID)
+                        {
+                            <li class="contact" id="@item.ID">
+                                <div class="wrap">
+                                    @if (item.OnlineStatus == "online")
+                                    {
+                                        <span class="contact-status online"></span>
+                                    }
+
+                                    @if (item.OnlineStatus == "away")
+                                    {
+                                        <span class="contact-status away"></span>
+
+                                    }
+
+                                    @if (item.OnlineStatus == "busy")
+                                    {
+                                        <span class="contact-status busy"></span>
+                                    }
+
+                                    @if (item.OnlineStatus == "offline")
+                                    {
+                                        <span class="contact-status offline"></span>
+                                    }
+
+                                    <img src="http://emilcarlsson.se/assets/louislitt.png" alt="" />
+                                    <div class="meta">
+                                        <p class="name">@item.UserName</p>
+                                        <p class="preview">You just got LITT up, Mike.</p>
+                                    </div>
+                                </div>
+                            </li>
+
+                        }
+                    }
+
+
+                    @*<li class="contact">
+            <div class="wrap">
+                <span class="contact-status offline"></span>
+                <img src="http://emilcarlsson.se/assets/jonathansidwell.png" alt="" />
+                <div class="meta">
+                    <p class="name">Jonathan Sidwell</p>
+                    <p class="preview"><span>You:</span> That's bullshit. This deal is solid.</p>
+                </div>
+            </div>
+        </li>*@
                 </ul>
             </div>
             <div id="bottom-bar">
@@ -178,6 +206,52 @@
     @*<script src='//production-assets.codepen.io/assets/common/stopExecutionOnTimeout-b2a7b3fe212eaa732349046d8416e00a9dec26eb7fd347590fbced3ab38af52e.js'></script>*@
     <script src='https://code.jquery.com/jquery-2.2.4.min.js'></script>
     <script>
+
+        "use strict";
+
+        var connection = new signalR.HubConnectionBuilder().withUrl("/chatHub").build();
+
+
+        connection.on("ReceiveMessage", function (message) {
+            $('<li class="sent"><img src="http://emilcarlsson.se/assets/mikeross.png" alt="" /><p>' + message + '</p></li>').appendTo($('.messages ul'));
+            $('.message-input input').val(null);
+            $('.contact.active .preview').html('<span>You: </span>' + message);
+            $(".messages").animate({ scrollTop: $(document).height() }, "fast");
+            //$("body").css("background-color", "red");
+        });
+
+        connection.start().then(function () {
+
+            console.log("Connection is OK!")
+
+        }).catch(function (err) {
+            return console.error(err.toString());
+        });
+
+
+        $(".submit").click(function () {
+
+            var message = $(".message-input input").val();
+            if ($.trim(message) == '') {
+                return false;
+            }
+
+            connection.invoke("SendMessage", message).catch(function (err) {
+                //return console.error(err.toString());
+            });
+
+            //$(".message-input input").val("")
+
+        });
+
+        $(window).on('keydown', function (e) {
+            if (e.which == 13) {
+                $('.submit').trigger('click');
+                return false;
+            }
+        });
+
+
     $(".messages").animate({ scrollTop: $(document).height() }, "fast");
 
         $("#profile-img").click(function () {
@@ -189,6 +263,8 @@
             $("#contacts").toggleClass("expanded");
         });
 
+
+
         $("#status-options ul li").click(function () {
             $("#profile-img").removeClass();
             $("#status-online").removeClass("active");
@@ -196,7 +272,6 @@
             $("#status-busy").removeClass("active");
             $("#status-offline").removeClass("active");
             $(this).addClass("active");
-
             if ($("#status-online").hasClass("active")) {
                 $("#profile-img").addClass("online");
             } else if ($("#status-away").hasClass("active")) {
@@ -208,9 +283,21 @@
             } else {
                 $("#profile-img").removeClass();
             };
-
             $("#status-options").removeClass("active");
+
+            var status = $(this).attr('id');
+
+
+            connection.invoke("ChangeStatus", status).catch(function (err) {
+
+            });
+            console.log(status);
         });
+
+        connection.on("UserStatus", function (userstatus, connectuserid) {
+            console.log(userstatus);
+            $("#" + connectuserid + " .contact-status").removeClass().addClass("contact-status " + userstatus);
+        })
 
         //function newMessage() {
         //    message = $(".message-input input").val();
@@ -239,54 +326,5 @@
 </html>
 
 
-<script>
-    "use strict";
-
-    var connection = new signalR.HubConnectionBuilder().withUrl("/chatHub").build();
-
-
-    connection.on("ReceiveMessage", function (message) {
-        $('<li class="sent"><img src="http://emilcarlsson.se/assets/mikeross.png" alt="" /><p>' + message + '</p></li>').appendTo($('.messages ul'));
-        $('.message-input input').val(null);
-        $('.contact.active .preview').html('<span>You: </span>' + message);
-        $(".messages").animate({ scrollTop: $(document).height() }, "fast");
-        //$("body").css("background-color", "red");
-    });
-
-    connection.start().then(function () {
-
-        console.log("Connection is OK!")
-
-    }).catch(function (err) {
-        return console.error(err.toString());
-    });
-
-
-    $(".submit").click(function () {
-
-        var message = $(".message-input input").val();
-        if ($.trim(message) == '') {
-            return false;
-        }
-
-        connection.invoke("SendMessage", message).catch(function (err) {
-            //return console.error(err.toString());
-        });
-
-        //$(".message-input input").val("")
-
-    });
-
-    $(window).on('keydown', function (e) {
-        if (e.which == 13) {
-            $('.submit').trigger('click');
-            return false;
-        }
-    });
-
-
-                // event.preventDefault();
-
-</script>
 
 
